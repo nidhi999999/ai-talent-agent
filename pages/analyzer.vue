@@ -37,6 +37,20 @@ const options = ref({
 
 const selectedCandidate = ref<CandidateResult | null>(null);
 
+const roundWeight = (value: number) => Number(value.toFixed(2));
+
+const onMatchWeightChange = (value: number) => {
+  const normalized = Math.min(0.9, Math.max(0.1, value));
+  options.value.matchWeight = roundWeight(normalized);
+  options.value.interestWeight = roundWeight(1 - normalized);
+};
+
+const onInterestWeightChange = (value: number) => {
+  const normalized = Math.min(0.9, Math.max(0.1, value));
+  options.value.interestWeight = roundWeight(normalized);
+  options.value.matchWeight = roundWeight(1 - normalized);
+};
+
 const getMustHaveSkills = () =>
   options.value.mustHaveSkillsRaw
     .split(",")
@@ -106,27 +120,59 @@ const loadMore = async () => {
 </script>
 
 <template>
+  <section class="page-head">
+    <h1>JD Analyzer</h1>
+    <p>Paste a job description, tune recruiter preferences, and generate an explainable ranked shortlist.</p>
+  </section>
+
   <section class="grid">
     <div class="panel">
-      <h2>Job Description Analyzer</h2>
-      <textarea v-model="jd" rows="8" placeholder="Paste full JD here..." />
+      <h2>Job Description Input</h2>
+      <textarea
+        v-model="jd"
+        rows="9"
+        placeholder="Paste the full job description here. Include role, required skills, and minimum years of experience."
+      />
 
       <div class="options-grid">
         <label>
-          Match Weight: {{ options.matchWeight.toFixed(2) }}
-          <input v-model.number="options.matchWeight" type="range" min="0.1" max="0.9" step="0.1" />
+          Match Weight (Skill/Experience Fit): {{ options.matchWeight.toFixed(2) }}
+          <input
+            :value="options.matchWeight"
+            type="range"
+            min="0.1"
+            max="0.9"
+            step="0.1"
+            @input="onMatchWeightChange(Number(($event.target as HTMLInputElement).value))"
+          />
         </label>
         <label>
-          Interest Weight: {{ options.interestWeight.toFixed(2) }}
-          <input v-model.number="options.interestWeight" type="range" min="0.1" max="0.9" step="0.1" />
+          Interest Weight (Candidate Intent): {{ options.interestWeight.toFixed(2) }}
+          <input
+            :value="options.interestWeight"
+            type="range"
+            min="0.1"
+            max="0.9"
+            step="0.1"
+            @input="onInterestWeightChange(Number(($event.target as HTMLInputElement).value))"
+          />
+          <small>Weights are auto-balanced to total 1.0 for consistent ranking.</small>
         </label>
         <label>
-          Min Experience
-          <input v-model.number="options.minExperience" type="number" min="0" max="12" />
+          Minimum Experience (Years)
+          <input
+            v-model.number="options.minExperience"
+            type="number"
+            min="0"
+            max="12"
+            placeholder="Example: 3 means only 3+ years candidates"
+          />
+          <small>Use this to exclude junior profiles from shortlist.</small>
         </label>
         <label>
-          Top K
-          <input v-model.number="options.topK" type="number" min="3" max="10" />
+          Top-K Highlight Count
+          <input v-model.number="options.topK" type="number" min="3" max="10" placeholder="How many top names to highlight" />
+          <small>This controls the Top shortlist preview section.</small>
         </label>
       </div>
 
@@ -136,8 +182,8 @@ const loadMore = async () => {
       </label>
 
       <label>
-        Must-have skills (comma-separated)
-        <input v-model="options.mustHaveSkillsRaw" type="text" placeholder="e.g. Laravel, API" />
+        Must-have skills (comma-separated, optional)
+        <input v-model="options.mustHaveSkillsRaw" type="text" placeholder="Example: Laravel, API, MySQL" />
       </label>
 
       <button :disabled="loading || !jd.trim()" @click="analyzeJD">
@@ -186,14 +232,43 @@ const loadMore = async () => {
 </template>
 
 <style scoped>
+.page-head {
+  margin-bottom: 12px;
+}
+.page-head h1 {
+  margin: 0;
+  font-size: 1.9rem;
+}
+.page-head p {
+  margin-top: 6px;
+  color: #64748b;
+}
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.panel { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; }
+.panel {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid #dbe4f0;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
+}
 h2, h3 { margin: 0 0 12px; }
 textarea, input[type="number"], input[type="text"] {
-  width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px; margin-top: 6px;
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 10px;
+  margin-top: 6px;
+  background: #fff;
+}
+textarea:focus,
+input[type="number"]:focus,
+input[type="text"]:focus {
+  border-color: #2563eb;
+  outline: 2px solid #bfdbfe;
 }
 .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 label { display: block; font-size: 14px; margin-top: 8px; }
+small { color: #64748b; display: block; margin-top: 4px; font-size: 12px; }
 .inline { display: flex; gap: 8px; align-items: center; }
 button {
   margin-top: 14px; width: 100%; border: 0; background: #1d4ed8; color: #fff; padding: 10px; border-radius: 10px;
@@ -211,7 +286,13 @@ button:disabled { opacity: 0.6; }
   margin-top: 12px;
   background: #0f766e;
 }
-.chat { margin-top: 16px; }
+.chat {
+  margin-top: 16px;
+  background: #fff;
+  border: 1px solid #dbe4f0;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
+}
 .bubble { padding: 10px; border-radius: 10px; margin-top: 8px; font-size: 14px; }
 .bubble.recruiter { background: #dbeafe; }
 .bubble.candidate { background: #dcfce7; }

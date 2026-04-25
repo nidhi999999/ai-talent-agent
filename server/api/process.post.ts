@@ -58,7 +58,9 @@ const knownSkills = [
   "php",
   "postgresql",
   "aws",
-  "docker"
+  "docker",
+  "html",
+  "css"
 ];
 
 function parseExperienceFromText(text: string): number {
@@ -296,7 +298,15 @@ export default defineEventHandler(async (event) => {
       chatSimulation: [],
       explanation: ""
     };
-  }).filter((candidate) => candidate.matchedSkills > 0);
+  }).filter((candidate) => {
+    if (candidate.matchedSkills === 0) {
+      return false;
+    }
+    if (parsed.skills.length >= 4 && candidate.matchedSkills < 2) {
+      return false;
+    }
+    return true;
+  });
 
   // 3) Simulate Interest (AI or free local fallback)
   for (const r of results) {
