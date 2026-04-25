@@ -163,13 +163,13 @@ OPENAI_API_KEY=
 ### Run
 
 ```bash
-npm run dev -- --host 127.0.0.1 --port 4000
+npm run dev -- --host 127.0.0.1 --port 3000
 ```
 
 Open:
-- `http://127.0.0.1:4000/`
-- `http://127.0.0.1:4000/analyzer`
-- `http://127.0.0.1:4000/candidates`
+- `http://127.0.0.1:3000/`
+- `http://127.0.0.1:3000/analyzer`
+- `http://127.0.0.1:3000/candidates`
 
 ## Usage Flow (Demo Friendly)
 
