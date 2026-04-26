@@ -250,23 +250,3 @@ README.md
 npm run build
 npm run preview
 ```
-
-## Hackathon Submission Checklist
-
-- [ ] Public GitHub repo URL
-- [ ] GitHub username
-- [ ] Updated README (this file)
-- [ ] Demo video link (3-5 min)
-- [ ] Project site URL (deployed or local instructions)
-- [ ] Repo shared with `hackathon@deccan.ai`
-
-## Limitations
-
-- Candidate sourcing is from mock dataset, not live platforms
-- Interest is simulated (not real candidate messaging)
-- No auth/role access yet
-
-## Security Notes
-
-- Never commit `.env`
-- Rotate API key immediately if it was ever exposed
